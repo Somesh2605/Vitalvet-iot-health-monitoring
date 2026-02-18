@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VitalVet Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      text-align: center;
+    }
+
+    header {
+      padding: 20px;
+      font-size: 26px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 40px;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      color: #333;
+      width: 250px;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    .value {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 10px;
+      font-size: 14px;
+      background: rgba(0,0,0,0.2);
+    }
+
+  </style>
+</head>
+
+<body>
+
+<header>
+  🐄 VitalVet – Cattle Health Monitoring Dashboard
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3>🌡 Temperature</h3>
+    <div class="value" id="temp">--</div>
+    <div class="status" id="tempStatus">Checking...</div>
+  </div>
+
+  <div class="card">
+    <h3>🫁 Oxygen Level</h3>
+    <div class="value" id="oxygen">--</div>
+    <div class="status" id="oxygenStatus">Checking...</div>
+  </div>
+
+  <div class="card">
+    <h3>❤️ Pulse</h3>
+    <div class="value" id="pulse">--</div>
+    <div class="status" id="pulseStatus">Checking...</div>
+  </div>
+
+  <div class="card">
+  <h3>🩺 Overall Health</h3>
+  <div class="value" id="healthStatus">--</div>
+</div>
+
+
+</div>
+
+<footer>
+  Real-time IoT Monitoring | Powered by ESP32 + Node.js + MongoDB
+</footer>
+
+<script>
+async function fetchData() {
+  try {
+    const response = await fetch("http://localhost:5000/api/sensordata");
+    const data = await response.json();
+
+    if (data.length > 0) {
+      const latest = data[0];
+
+      document.getElementById("temp").innerText = latest.temperature + " °C";
+      document.getElementById("oxygen").innerText = latest.oxygen + " %";
+      document.getElementById("pulse").innerText = latest.pulse + " bpm";
+
+      // Temperature status logic for cattle
+      if (latest.temperature < 38) {
+        document.getElementById("tempStatus").innerText = "⚠ Below Normal";
+      } else if (latest.temperature > 39.5) {
+        document.getElementById("tempStatus").innerText = "⚠ Fever Detected";
+      } else {
+        document.getElementById("tempStatus").innerText = "Normal";
+      }
+
+      // Oxygen status
+      if (latest.oxygen < 90) {
+        document.getElementById("oxygenStatus").innerText = "⚠ Low Oxygen";
+      } else {
+        document.getElementById("oxygenStatus").innerText = "Normal";
+      }
+
+      // Pulse status for cattle
+      if (latest.pulse < 48) {
+        document.getElementById("pulseStatus").innerText = "⚠ Low Pulse";
+      } else if (latest.pulse > 84) {
+        document.getElementById("pulseStatus").innerText = "⚠ High Pulse";
+      } else {
+        document.getElementById("pulseStatus").innerText = "Normal";
+      }
+
+      let health = "Healthy";
+
+if (
+  latest.temperature > 39.5 ||
+  latest.temperature < 38 ||
+  latest.pulse > 90 ||
+  latest.pulse < 45 ||
+  latest.oxygen < 88
+) {
+  health = "🔴 Critical";
+} 
+else if (
+  latest.temperature > 39 ||
+  latest.pulse > 84 ||
+  latest.oxygen < 92
+) {
+  health = "🟡 Monitor Closely";
+}
+else {
+  health = "🟢 Healthy";
+}
+
+document.getElementById("healthStatus").innerText = health;
+
+    }
+
+  } catch (error) {
+    console.log("Error fetching data");
+  }
+}
+
+fetchData();
+setInterval(fetchData, 5000);
+</script>
+
+</body>
+</html>
