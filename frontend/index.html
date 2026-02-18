@@ -26,6 +26,9 @@
       flex-wrap: wrap;
       margin-top: 40px;
       gap: 20px;
+
+      
+
     }
 
     .card {
@@ -92,6 +95,12 @@
   <div class="card">
   <h3>🩺 Overall Health</h3>
   <div class="value" id="healthStatus">--</div>
+</div>
+
+<div class="card">
+  <h3>🧠 AI Risk Prediction</h3>
+  <div class="value" id="riskScore">--</div>
+  <div class="status" id="riskLevel">Checking...</div>
 </div>
 
 
@@ -172,6 +181,27 @@ document.getElementById("healthStatus").innerText = health;
 
 fetchData();
 setInterval(fetchData, 5000);
+
+async function fetchPrediction() {
+  try {
+    const response = await fetch("http://localhost:5000/api/predict");
+    const result = await response.json();
+
+    if (result.riskScore) {
+      document.getElementById("riskScore").innerText =
+        "Score: " + result.riskScore;
+
+      document.getElementById("riskLevel").innerText =
+        "Level: " + result.riskLevel;
+    }
+  } catch (error) {
+    console.log("Error fetching prediction");
+  }
+}
+
+fetchPrediction();
+setInterval(fetchPrediction, 5000);
+
 </script>
 
 </body>
